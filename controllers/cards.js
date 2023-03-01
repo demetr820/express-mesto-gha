@@ -21,11 +21,17 @@ const createCard = (req, res, next) => {
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Card.findByIdAndDelete({ _id: req.params.cardId })
     .orFail(new NotFoundError('Карточка не найдена'))
     .then((card) => res.send(card))
-    .catch((err) => res.status(err.status).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Ошибка в данных'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const likeCard = (req, res, next) => {
