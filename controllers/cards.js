@@ -44,7 +44,8 @@ const likeCard = (req, res, next) => {
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
-  ).orFail(new NotFoundError('Карточка не найдена'))
+  )
+    .orFail(new NotFoundError('Карточка не найдена'))
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -59,7 +60,8 @@ const dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } },
   { new: true },
-).orFail(new NotFoundError('Карточка не найдена'))
+)
+  .orFail(new NotFoundError('Карточка не найдена'))
   .then((card) => res.send(card))
   .catch((err) => {
     if (err.name === 'CastError') {
