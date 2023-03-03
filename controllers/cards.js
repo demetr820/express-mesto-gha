@@ -22,12 +22,17 @@ const createCard = (req, res, next) => {
 };
 
 const deleteCard = (req, res, next) => {
-  Card.findByIdAndDelete({ _id: req.params.cardId })
-    .orFail(new NotFoundError('Карточка не найдена'))
-    .then((card) => res.send(card))
+  Card.findByIdAndDelete(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        next(new NotFoundError('Карточка не найдена'));
+        return;
+      }
+      res.send(card);
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequestError('Ошибка в данных'));
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Не верный ID'));
       } else {
         next(err);
       }

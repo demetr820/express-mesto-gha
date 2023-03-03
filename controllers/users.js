@@ -1,3 +1,4 @@
+// const mongoose = require('mongoose');
 const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
@@ -9,20 +10,17 @@ const getUsers = (req, res) => {
 };
 
 const getUser = (req, res, next) => {
-  const { userId } = req.params;
-  User.findById(userId)
+  User.findById(req.params.userId, (err, user) => {
+    if (err) return next(new BadRequestError('Ошибка ID'));
+    if (user === null) return next(new NotFoundError('Oops'));
+    return res.send(user);
+  })
     .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new NotFoundError('Пользователь не найден'));
-      } else {
-        next(err);
-      }
-    });
-};
+    .catch((err) => res.status(500).send({ message: err.message }));;
+}
+
 const getMe = (req, res, next) => {
-  const { _id } = req.user._id;
-  User.findById(_id)
+  User.findById(req.user._id)
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -49,7 +47,7 @@ const createUser = (req, res, next) => {
 const updateUser = (req, res, next) => {
   const { name, about, avatar } = req.body;
   const { _id } = req.user;
-  User.findByIdAndUpdate(_id, { name, about, avatar }, { new: true })
+  User.findByIdAndUpdate(_id, { name, about, avatar }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
