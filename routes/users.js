@@ -13,7 +13,7 @@ router.get('/', getUsers);
 
 router.get('/:userId', getUser);
 
-router.get('/:userId', getMe);
+router.get('/me', getMe);
 
 router.post('/', createUser);
 

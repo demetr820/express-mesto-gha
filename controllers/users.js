@@ -2,10 +2,10 @@ const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(next);
 };
 
 const getUser = (req, res, next) => {
@@ -28,7 +28,13 @@ const getUser = (req, res, next) => {
 
 const getMe = (req, res, next) => {
   User.findById(req.user._id)
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (!user) {
+        next(new NotFoundError('Карточка не найдена'));
+        return;
+      }
+      res.send(user);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new NotFoundError('Пользователь не найден'));
@@ -52,36 +58,48 @@ const createUser = (req, res, next) => {
 };
 
 const updateUser = (req, res, next) => {
-  const { name, about, avatar } = req.body;
-  const { _id } = req.user;
+  const { name, about } = req.body;
   User.findByIdAndUpdate(
-    _id,
-    { name, about, avatar },
+    req.user._id,
+    { name, about },
     { new: true, runValidators: true },
   )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
+    .then((user) => {
+      if (!user) {
         next(new NotFoundError('Пользователь не найден'));
-      } else if (err.name === 'ValidationError') {
-        next(new BadRequestError('Ошибка в данных'));
+        return;
       }
-      next(err);
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new BadRequestError('Ошибка в данных'));
+      } else {
+        next(err);
+      }
     });
 };
 
 const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  const { _id } = req.user;
-  User.findByIdAndUpdate(_id, { avatar }, { new: true })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
+  User.findByIdAndUpdate(
+    req.user._id,
+    { avatar },
+    { new: true, runValidators: true },
+  )
+    .then((user) => {
+      if (!user) {
         next(new NotFoundError('Пользователь не найден'));
-      } else if (err.name === 'ValidationError') {
-        next(new BadRequestError('Ошибка в данных'));
+        return;
       }
-      next(err);
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new BadRequestError('Ошибка в данных'));
+      } else {
+        next(err);
+      }
     });
 };
 

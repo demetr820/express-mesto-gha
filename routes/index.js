@@ -5,7 +5,5 @@ const NotFoundError = require('../errors/NotFoundError');
 
 router.use('/users', userRoutes);
 router.use('/cards', cardsRoutes);
-router.use('*', (req, res, next) => {
-  next(new NotFoundError('Не правильный адрес'));
-});
+router.use('*', (req, res, next) => next(new NotFoundError('Страница не найдена')));
 module.exports = router;
