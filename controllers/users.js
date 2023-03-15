@@ -69,7 +69,13 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send(user))
+    .then((user) => res.send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      id: user._id,
+    }))
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Почта уже занята'));
