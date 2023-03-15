@@ -23,7 +23,13 @@ const getMe = (req, res, next) => {
         next(new NotFoundError('Карточка не найдена'));
         return;
       }
-      res.send(user);
+      res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        id: user._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
