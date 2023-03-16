@@ -18,6 +18,5 @@ const validateURL = (value) => {
   return value;
 };
 
-module.exports = status;
-
-module.exports = validateURL;
+exports.status = status;
+exports.validateURL = validateURL;
