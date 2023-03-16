@@ -61,7 +61,8 @@ const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  bcrypt.hash(password, salt)
+  bcrypt
+    .hash(password, salt)
     .then((hash) => User.create({
       name,
       about,
@@ -79,6 +80,11 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Почта уже занята'));
+        return;
+      }
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Не корректные данные при создании карточки'));
+        return;
       }
       next(err);
     });
@@ -132,19 +138,22 @@ const updateAvatar = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
-  User
-    .findOne({ email })
+  User.findOne({ email })
     .select('+password')
     .orFail(new UnauthorizedError('Не верная почта или пароль'))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;
       }
-      return Promise.reject(new UnauthorizedError('Не верная почта или пароль'));
+      return Promise.reject(
+        new UnauthorizedError('Не верная почта или пароль'),
+      );
     }))
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.send({ user, token });
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
+      res.send({ token });
     })
     .catch(next);
 };
